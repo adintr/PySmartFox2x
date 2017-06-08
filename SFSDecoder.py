@@ -1,3 +1,5 @@
+from struct import unpack
+
 def bin2str(bin):
     ret = ""
     for ch in bin:
@@ -5,10 +7,8 @@ def bin2str(bin):
     return ret 
 
 class SFSBuffer:
-    __idx = 0
-    __buffer = bytearray()
-    
     def __init__(self, buf):
+        self.__idx = 0
         self.__buffer = buf
     
     def getIdx(self):
@@ -41,13 +41,17 @@ class SFSBuffer:
         for n in range(k, k+8):
             val = val*256 + self.__buffer[n]
         self.__idx += 8
-        return val 
+        return val
+
+    def getFloat(self):
+        return unpack('!f', self.get(4))
+
+    def getDouble(self):
+        return unpack('!d', self.get(8))
 
     def get(self, length):
-        k = self.__idx
-        ret = self.__buffer[k:k+length]
         self.__idx += length
-        return ret
+        return self.__buffer[self.__idx - length: self.__idx]
 
     def getBuffer(self):
         return self.__buffer[self.__idx:]
@@ -95,6 +99,27 @@ def binDecodeIntArray(sfsBuffer):
         arr.append(val)
     return ('int_array', arr)
 
+def binDecodeFloatArray(sfsBuffer):
+    arr = []
+    arrSize = sfsBuffer.getShort()
+    for _ in range(0, arrSize):
+        arr.append(sfsBuffer.getFloat())
+
+    return ('utf_array', '')
+
+def binDecodeDoubleArray(sfsBuffer):
+    arr = []
+    arrSize = sfsBuffer.getShort()
+    for _ in range(0, arrSize):
+        arr.append(sfsBuffer.getDouble())
+
+    return ('double_array', '')
+
+def binDecodeUTFArray(sfsBuffer):
+    len = sfsBuffer.getShort()
+    strbuf = sfsBuffer.get(len)
+    return ('utf_array', strbuf.decode('utf-8'))
+
 def binDecodeLongArray(sfsBuffer):
     arr = []
     arrSize = sfsBuffer.getShort()
@@ -132,12 +157,20 @@ def decodeObject(sfsBuffer):
         return binDecodeIntArray(sfsBuffer)
     if (typeId == 13):
         return binDecodeLongArray(sfsBuffer)
+    if (typeId == 14):
+        return binDecodeFloatArray(sfsBuffer)
+    if (typeId == 15):
+        return binDecodeDoubleArray(sfsBuffer)
+    if (typeId == 16):
+        return binDecodeUTFArray(sfsBuffer)
     if (typeId == 17):
         return decodeSFSArray(sfsBuffer)
     if (typeId == 18):
         sfsBuffer.setIdx(sfsBuffer.getIdx() - 1)
         return ('object', decodeSFSObject(sfsBuffer))
     print "no matching typeId:" + str(typeId)
+
+
 def decodeSFSObject(sfsBuffer):
     sfsObj = {}
     #sfsBuffer = SFSBuffer(buffer)
