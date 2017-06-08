@@ -94,7 +94,7 @@ def object2binary(obj):
     arr.append(obj_len/256)
     arr.append(obj_len%256)
     for k in obj:
-        print k, obj[k]
+        #print k, obj[k]
         #print obj[k][0], obj[k][1]
         #print encodeData(obj[k][1], obj[k][0])
         arr.extend(encodeSFSObjectKey(k))
