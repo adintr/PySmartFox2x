@@ -24,6 +24,17 @@ class SFSObject:
     def add_object(self, name, type, object):
         self.object[name] = (type, object)
 
+    def to_pyobject(self):
+        robj = {}
+        for key in self.object:
+            objtype = self.object[key][0]
+            objval = self.object[key][1]
+            if objtype == "object":
+                robj[key] = objval.to_pyobject()
+            else:
+                robj[key] = objval
+        return robj
+
     def show_object(self, indent):
         retstr = "<object> {\n"
         indent += 1

@@ -1,4 +1,3 @@
-
 sfx_support_types = {
     "null": {
         'decoder': lambda coder: None,

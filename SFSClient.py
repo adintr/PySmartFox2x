@@ -14,7 +14,7 @@ class SF2XClient:
     def connect(self):
         self.sock.connect((self.addr, self.port))
         res = self.request({'bin': ('bool', True), 'api': ('string', '1.6.1'), 'cl': ('string', 'Android')})
-        self.token = res[1]['p'][1]['tk'][1]
+        self.token = res['p']['tk']
         if self.debug:
             print "Connect Token: ", self.token
 
@@ -74,4 +74,4 @@ class SF2XClient:
             print "Decode: ", resobj
             print "\n"
 
-        return resobj
+        return resobj.to_pyobject()
