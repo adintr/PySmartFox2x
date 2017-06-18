@@ -116,9 +116,14 @@ def binDecodeDoubleArray(sfsBuffer):
     return ('double_array', '')
 
 def binDecodeUTFArray(sfsBuffer):
-    len = sfsBuffer.getShort()
-    strbuf = sfsBuffer.get(len)
-    return ('utf_array', strbuf.decode('utf-8'))
+    arr = []
+    arrSize = sfsBuffer.getShort()
+    for _ in range(0, arrSize):
+        arr.append(binDecodeString(sfsBuffer))
+
+    #strbuf = sfsBuffer.get(len)
+    #strbuf.decode('utf-8')
+    return ('utf_array', arr)
 
 def binDecodeLongArray(sfsBuffer):
     arr = []
@@ -139,6 +144,8 @@ def decodeSFSArray(sfsBuffer):
 
 def decodeObject(sfsBuffer):
     typeId = sfsBuffer.getByte()
+    if (typeId == 0):
+        return None
     if (typeId == 1):
         return binDecodeBool(sfsBuffer)
     if (typeId == 2):

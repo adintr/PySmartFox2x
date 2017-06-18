@@ -18,6 +18,17 @@ class SF2XClient:
         if self.debug:
             print "Connect Token: ", self.token
 
+    def login(self, username, password, zone, extobj):
+        loginObj = {
+            'zn': ('string', zone),
+            'un': ('string', username),
+            'pw': ('string', password),
+            'p': ('object', extobj),
+        }
+
+        res = self.request(loginObj)
+        return res
+
     def request(self, sfxobject, controller = 0):
         sendobj = {
             'c': ('byte', controller),
