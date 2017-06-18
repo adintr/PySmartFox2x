@@ -9,6 +9,9 @@ class SFSDecoder:
 
     def _get(self, length):
         self.__idx += length
+        if self.__idx >= len(self.__buffer):
+            raise Exception("get length " + str(length) + " from " + str(self.__idx) + " out of range")
+
         return self.__buffer[self.__idx - length: self.__idx]
 
     def _getByte(self):
@@ -61,7 +64,9 @@ class SFSDecoder:
         sfsObj = SFSObject()
         dataSize = self._getShort()
         for n in range(0, dataSize):
-            sfsObj.add_orign_object(self._getString(), self._getObjAndType())
+            key = self._getString()
+            val = self._getObjAndType()
+            sfsObj.add_orign_object(key, val)
         return sfsObj
 
     def getSFSObject(self):
