@@ -1,80 +1,48 @@
-import socket, re
-from SFSEncoder import *
+import socket
+from SFSEncoder import object2binary
+from SFSDecoder import decodeObject, SFSBuffer
+from HelpFunc import printByteArray
 
-def printByteArray(data):
-    str = data.encode('hex')
-    str = re.sub(r"(\w{32})", "\\1\n", str)
-    str = re.sub(r"(\w\w)", "\\1 ", str)
-    print str
+class SF2XClient:
+    def __init__(self, addr, port, debugMode = True):
+        self.addr = addr
+        self.port = port
+        self.debug = debugMode
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def readByteArray(str):
-    str = str.replace(' ', '')
-    str = str.replace('\n', '')
-    str = str.replace('\r', '')
-    str = str.replace('\t', '')
-    return bytearray(str.decode('hex'))
+    def connect(self):
+        self.sock.connect((self.addr, self.port))
 
-def prepareTCPPacketObject(request, targetController, msgId):
-    TCPPacket = {}
-    TCPPacket['c'] = ('byte', targetController)
-    TCPPacket['a'] = ('short', msgId)
-    TCPPacket['p'] = ('object', request)
-    return TCPPacket
+    def request(self, sfxobject, controller = 0, msgid = 0):
+        sendobj = {
+            'c': ('byte', controller),
+            'a': ('short', msgid),
+            'p': ('object', sfxobject),
+        }
 
-def buildTCPPacketStream(packet_obj):
-    stream = bytearray()
-    packet = object2binary(packet_obj)
-    stream.append(8*16)
-    stream.append((len(packet)/256)%256)
-    stream.append(len(packet)%256)
-    stream.extend(packet)
-    return stream
+        stream = bytearray()
+        packet = object2binary(sendobj)
+        stream.append(8*16)
+        stream.append((len(packet)/256)%256)
+        stream.append(len(packet)%256)
+        stream.extend(packet)
 
-def buildLoginRequest(zone, uname, pw, sfsObj):
-    r = {}
-    r['zn'] = ('string',zone)#"dgr_808001")
-    r['un'] = ('string', uname)#"130225")
-    r['pw'] = ('string', pw)#"")
-    r['p'] = ('object', sfsObj)
-    return r
+        self.sock.send(stream)
 
-#roomId == -1 if no room
-def buildExtensionRequest(cmd, roomId, sfsObj):
-    r = {}
-    r['c'] = ('string', cmd)
-    r['r'] = ('int', roomId)
-    r['p'] = ('object',sfsObj)
-    return r 
+        header = self.sock.recv(3)
+        dataLen = ord(header[1]) * 256 + ord(header[2])
 
-def send(s, packet):
-    s.send(packet)
-    header = s.recv(3)
-    dataLen = ord(header[1]) * 256 + ord(header[2])
-    print 'recv data len:' + str(dataLen)
-    recv_len = 0
-    data = bytearray()
-    while recv_len < dataLen:
-        r = s.recv(1024)
-        data.extend(r)
-        recv_len += len(r)
-    return data
+        if self.debug:
+            print 'recv data len:' + str(dataLen)
 
-#connect to sfs server via tcp socket
-def connect(addr, port):
-    address = (addr, port)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(address)
-    return s
+        recv_len = 0
+        data = bytearray()
+        while recv_len < dataLen:
+            r = self.sock.recv(dataLen - recv_len)
+            data.extend(r)
+            recv_len += len(r)
 
-def login(s, zone, uname, pw, sfsObj):
-    r = buildLoginRequest(zone, uname, pw, sfsObj)
-    obj = prepareTCPPacketObject(r,0,1)
-    packet = buildTCPPacketStream(obj)
-    print str(packet).encode("hex")
-    printByteArray(packet)
-    print packet
-    return send(s, packet)
+        if self.debug:
+            printByteArray(data)
 
-
-
-
+        return decodeObject(SFSBuffer(data))
