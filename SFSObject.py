@@ -12,6 +12,12 @@ class SFSObject:
     def __str__(self):
         return self.show_object(0)
 
+    def put_string(self, name, val):
+        self.add_object(name, "string", str(val))
+
+    def put_int(self, name, val):
+        self.add_object(name, "int", int(val))
+
     def add_orign_object(self, name, typeobj):
         if len(typeobj) != 2:
             raise Exception("typeobject should be (type, obj) format")
@@ -45,12 +51,15 @@ class SFSObject:
         retstr += "\t" * (indent - 1) + "}"
         return retstr
 
+    def get_origin_objects(self):
+        return self.object
+
     def show_object_by_type(self, type, obj, indent):
         if type == "object":
             return obj.show_object(indent)
 
         if type in ("bool", "byte", "short", "int", "long", "float", "double", "string"):
-            return str(obj) + " <" + type + ">"
+            return unicode(obj) + " <" + type + ">"
 
         if type == "sfxobj_array":
             retstr = "<sfx_array> [\n"
