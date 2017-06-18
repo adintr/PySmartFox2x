@@ -1,12 +1,18 @@
-import socket
+import socket, re
 from SFSEncoder import *
 
 def printByteArray(data):
-    strData = ""
-    for ch in data:
-        strData += "%.02x " % ch
+    str = data.encode('hex')
+    str = re.sub(r"(\w{32})", "\\1\n", str)
+    str = re.sub(r"(\w\w)", "\\1 ", str)
+    print str
 
-    print strData
+def readByteArray(str):
+    str = str.replace(' ', '')
+    str = str.replace('\n', '')
+    str = str.replace('\r', '')
+    str = str.replace('\t', '')
+    return bytearray(str.decode('hex'))
 
 def prepareTCPPacketObject(request, targetController, msgId):
     TCPPacket = {}
@@ -64,6 +70,9 @@ def login(s, zone, uname, pw, sfsObj):
     r = buildLoginRequest(zone, uname, pw, sfsObj)
     obj = prepareTCPPacketObject(r,0,1)
     packet = buildTCPPacketStream(obj)
+    print str(packet).encode("hex")
+    printByteArray(packet)
+    print packet
     return send(s, packet)
 
 
