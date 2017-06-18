@@ -8,24 +8,37 @@ class SF2XClient:
         self.addr = addr
         self.port = port
         self.debug = debugMode
+        self.msgid = 0
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def connect(self):
         self.sock.connect((self.addr, self.port))
+        res = self.request({'bin': ('bool', True), 'api': ('string', '1.6.1'), 'cl': ('string', 'Android')})
+        self.token = res[1]['p'][1]['tk'][1]
+        if self.debug:
+            print "Connect Token: ", self.token
 
-    def request(self, sfxobject, controller = 0, msgid = 0):
+    def request(self, sfxobject, controller = 0):
         sendobj = {
             'c': ('byte', controller),
-            'a': ('short', msgid),
+            'a': ('short', self.msgid),
             'p': ('object', sfxobject),
         }
 
+        self.msgid += 1
         stream = bytearray()
         packet = object2binary(sendobj)
-        stream.append(8*16)
-        stream.append((len(packet)/256)%256)
-        stream.append(len(packet)%256)
+        sendLen = len(packet)
+        stream.append(8 * 16)
+        stream.append((sendLen / 256) % 256)
+        stream.append(sendLen % 256)
         stream.extend(packet)
+
+        if self.debug:
+            print "send object: ", sendobj
+            print "send data len: ", sendLen
+            printByteArray(packet)
+            print "\n"
 
         self.sock.send(stream)
 
@@ -45,4 +58,9 @@ class SF2XClient:
         if self.debug:
             printByteArray(data)
 
-        return decodeObject(SFSBuffer(data))
+        resobj = decodeObject(SFSBuffer(data))
+        if self.debug:
+            print "Decode: ", resobj
+            print "\n"
+
+        return resobj
