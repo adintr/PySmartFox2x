@@ -18,4 +18,4 @@ def readByteArray(str):
 def analyzePack(strhex):
     packdata = readByteArray(strhex)
     printByteArray(packdata)
-    print decodeObject(SFSBuffer(packdata))
+    print decodeObject(SFSBuffer(packdata))[1]

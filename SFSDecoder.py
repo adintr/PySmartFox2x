@@ -1,4 +1,5 @@
 from struct import unpack
+from SFSObject import SFSObject
 
 def bin2str(bin):
     ret = ""
@@ -105,7 +106,7 @@ def binDecodeFloatArray(sfsBuffer):
     for _ in range(0, arrSize):
         arr.append(sfsBuffer.getFloat())
 
-    return ('utf_array', '')
+    return ('float_array', '')
 
 def binDecodeDoubleArray(sfsBuffer):
     arr = []
@@ -123,7 +124,7 @@ def binDecodeUTFArray(sfsBuffer):
 
     #strbuf = sfsBuffer.get(len)
     #strbuf.decode('utf-8')
-    return ('utf_array', arr)
+    return ('string_array', arr)
 
 def binDecodeLongArray(sfsBuffer):
     arr = []
@@ -179,7 +180,7 @@ def decodeObject(sfsBuffer):
 
 
 def decodeSFSObject(sfsBuffer):
-    sfsObj = {}
+    sfsObj = SFSObject()
     #sfsBuffer = SFSBuffer(buffer)
     header = sfsBuffer.getByte()
     #print "header"
@@ -193,6 +194,6 @@ def decodeSFSObject(sfsBuffer):
         keyName = bin2str(sfsBuffer.get(keySize))
         #print "keyName:" + keyName
         aObj = decodeObject(sfsBuffer)
-        sfsObj[keyName] = aObj
+        sfsObj.add_orign_object(keyName, aObj)
 
     return sfsObj
