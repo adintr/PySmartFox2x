@@ -1,4 +1,4 @@
-import socket
+import socket, hashlib
 from SFSEncoder import object2binary
 from SFSDecoder import SFSDecoder
 from HelpFunc import printByteArray
@@ -19,10 +19,17 @@ class SF2XClient:
             print "Connect Token: ", self.token
 
     def login(self, username, password, zone, extobj):
+        if not self.token:
+            return False
+
+        md5 = hashlib.md5()
+        md5.update(self.token + password)
+        sfxpass = md5.hexdigest()
+
         loginObj = {
             'zn': ('string', zone),
             'un': ('string', username),
-            'pw': ('string', password),
+            'pw': ('string', sfxpass),
             'p': ('object', extobj),
         }
 
