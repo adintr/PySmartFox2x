@@ -1,5 +1,5 @@
 import re
-from SFSDecoder import decodeObject, SFSBuffer
+from SFSDecoder import SFSDecoder
 
 def printByteArray(data):
     shtr = str(data).encode('hex')
@@ -18,4 +18,4 @@ def readByteArray(str):
 def analyzePack(strhex):
     packdata = readByteArray(strhex)
     printByteArray(packdata)
-    print decodeObject(SFSBuffer(packdata))[1]
+    print SFSDecoder(packdata).getSFSObject()

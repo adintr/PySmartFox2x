@@ -1,6 +1,6 @@
 import socket
 from SFSEncoder import object2binary
-from SFSDecoder import decodeObject, SFSBuffer
+from SFSDecoder import SFSDecoder
 from HelpFunc import printByteArray
 
 class SF2XClient:
@@ -69,7 +69,7 @@ class SF2XClient:
         if self.debug:
             printByteArray(data)
 
-        resobj = decodeObject(SFSBuffer(data))
+        resobj = SFSDecoder(data).getSFSObject()
         if self.debug:
             print "Decode: ", resobj
             print "\n"
