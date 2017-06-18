@@ -9,7 +9,7 @@ class SFSDecoder:
 
     def _get(self, length):
         self.__idx += length
-        if self.__idx >= len(self.__buffer):
+        if self.__idx >= len(self.__buffer) + 1:
             raise Exception("get length " + str(length) + " from " + str(self.__idx) + " out of range")
 
         return self.__buffer[self.__idx - length: self.__idx]
@@ -59,6 +59,16 @@ class SFSDecoder:
         objdecoder = sfx_support_types[objtype]['decoder']
         obj = objdecoder(self)
         return (objtype, obj)
+
+    def _getSFXArray(self):
+        arr = []
+        arrSize = self._getShort()
+
+        for n in range(0, arrSize):
+            val = self._getObjAndType()
+            arr.append(val)
+
+        return arr
 
     def _getSFXObject(self):
         sfsObj = SFSObject()

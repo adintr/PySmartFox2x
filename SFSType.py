@@ -54,7 +54,7 @@ sfx_support_types = {
         'decoder': lambda coder: coder._getArray('string'),
     },
     "sfxobj_array": {
-        'decoder': lambda coder: coder._getObjAndType(),
+        'decoder': lambda coder: coder._getSFXArray(),
     },
 }
 
