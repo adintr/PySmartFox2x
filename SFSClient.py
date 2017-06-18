@@ -34,7 +34,22 @@ class SF2XClient:
         }
 
         res = self.request(loginObj)
-        return res
+        resp = res['p']
+        if 'ec' in resp:
+            return False
+
+        if 'rs' in resp:
+            return True
+
+        return False
+
+    def extension_request(self, cmd, sfxobject, roomid = -1):
+        extobject = {
+            'c': ('string', cmd),
+            'r': ('int', roomid),
+            'p': ('object', sfxobject),
+        }
+        return self.request(extobject, 1)
 
     def request(self, sfxobject, controller = 0):
         sendobj = {
@@ -78,7 +93,7 @@ class SF2XClient:
 
         resobj = SFSDecoder(data).getSFSObject()
         if self.debug:
-            print "Decode: ", resobj
+            print "Decode: ", unicode(resobj)
             print "\n"
 
         return resobj.to_pyobject()
