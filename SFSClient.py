@@ -1,10 +1,10 @@
 import socket, hashlib
-from SFSEncoder import object2binary
+from SFSEncoder import encode_sfx_object
 from SFSDecoder import SFSDecoder
 from HelpFunc import printByteArray
 
 class SF2XClient:
-    def __init__(self, addr, port, debugMode = True):
+    def __init__(self, addr, port, debugMode = False):
         self.addr = addr
         self.port = port
         self.debug = debugMode
@@ -60,7 +60,7 @@ class SF2XClient:
 
         self.msgid += 1
         stream = bytearray()
-        packet = object2binary(sendobj)
+        packet = encode_sfx_object(sendobj)
         sendLen = len(packet)
         stream.append(8 * 16)
         stream.append((sendLen / 256) % 256)

@@ -1,108 +1,83 @@
+from SFSObject import SFSObject
+from SFSType import sfx_support_types
+from struct import pack
 
+class SFSEncoder:
+    def __init__(self):
+        self.buff = bytearray()
 
-def encodeSFSObjectKey(key):
-    key_len = len(key)
-    arr = bytearray()
-    arr.append(key_len / 256)
-    arr.append(key_len % 256)
+    def encodeObject(self, sfsobject):
+        self._putbyte(self._get_type_id("object"))
+        self._putobject(sfsobject)
+        return self.buff
 
-    for ch in key:
-        arr.append(ord(ch))
-    return arr
+    def _get_type_id(self, typename):
+        if typename not in sfx_support_types:
+            raise Exception("unsupport type: " + typename)
+        return sfx_support_types[typename]['id']
 
-def binEncodeByte(value):
-    arr = bytearray()
-    arr.append(2)
-    arr.append(value%256)
-    return arr
+    def _putbyte(self, byte):
+        self.buff.append(byte)
 
-def binEncodeShort(value):
-    arr = bytearray()
-    if (value < 0):
-        value = (1 << 16) + value
-    arr.append(3)
-    arr.append((value >> 8) & 0xFF)
-    arr.append(value & 0xFF)
-    return arr
+    def _putbytes(self, bytes):
+        self.buff.extend(bytes)
 
-def binEncodeInt(value):
-    arr = bytearray()
-    if (value < 0):
-        value = (1 << 32) + value
-    print value
-    arr.append(4)
-    arr.append(value >> 24)
-    arr.append((value >> 16) & 0xFF)
-    arr.append((value >> 8) & 0xFF)
-    arr.append(value & 0xFF)
-    return arr
+    def _putshort(self, val):
+        self._putbytes(pack('!h', val))
 
-def binEncodeUTFString(strval):
-    arr = bytearray()
-    arr.append(8)
-    arr.append(len(strval) >> 8)
-    arr.append(len(strval) & 0xFF)
-    for ch in strval:
-        arr.append(ord(ch))
-    return arr
+    def _putint(self, val):
+        self._putbytes(pack('!i', val))
 
-def binEncodeLong(value):
-    arr = bytearray()
-    if ( value < 0):
-        value = (1 << 64) + value
-    arr.append(5)
-    arr.append((value >> 56) & 0xFF)
-    arr.append((value >> 48) & 0xFF)
-    arr.append((value >> 40) & 0xFF)
-    arr.append((value >> 32) & 0xFF)
-    arr.append((value >> 24) & 0xFF)
-    arr.append((value >> 16) & 0xFF)
-    arr.append((value >> 8) & 0xFF)
-    arr.append(value & 0xFF)
-    return arr
+    def _putlong(self, val):
+        self._putbytes(pack('!q', val))
 
-def binEncodeBool(value):
-    arr = bytearray()
-    arr.append(1)
-    if(value is True):
-        arr.append(1)
-    else:
-        arr.append(0)
-    return arr
+    def _putfloat(self, val):
+        self._putbytes(pack('!f', val))
 
-def encodeData(data, dataType):
-    if(dataType == 'byte'):
-        return binEncodeByte(data)
-    if(dataType == 'short'):
-        return binEncodeShort(data)
-    if(dataType == 'int'):
-        return binEncodeInt(data)
-    if(dataType == 'string'):
-        return binEncodeUTFString(data)
-    if(dataType == 'long'):
-        return binEncodeLong(data)
-    if(dataType == 'bool'):
-        return binEncodeBool(data)
-    if(dataType == 'object'):
-        return object2binary(data)
-    print "no matching type found"
+    def _putdouble(self, val):
+        self._putbytes(pack('!d', val))
 
-def object2binary(obj):
-    arr = bytearray()
-    arr.append(18)
-    obj_len = len(obj)
-    arr.append(obj_len/256)
-    arr.append(obj_len%256)
-    for k in obj:
-        #print k, obj[k]
-        #print obj[k][0], obj[k][1]
-        #print encodeData(obj[k][1], obj[k][0])
-        arr.extend(encodeSFSObjectKey(k))
-        arr.extend(encodeData(obj[k][1], obj[k][0]))
-    return arr
+    def _putstring(self, val):
+        strbyte = bytearray(unicode(val).encode('utf-8'))
+        self._putshort(len(strbyte))
+        self._putbytes(strbyte)
 
+    def _putobject(self, object):
+        if isinstance(object, SFSObject):
+            object = object.get_origin_objects()
 
-if __name__ == '__main__':
-    array = binEncodeShort(-1)
-    for ch in array:
-        print ch
+        obj_len = len(object)
+        self._putshort(obj_len)
+
+        for key in object:
+            self._putstring(key)
+            objtype = object[key][0]
+            objval = object[key][1]
+
+            self._putbyte(self._get_type_id(objtype))
+            encoder = sfx_support_types[objtype]['encoder']
+            encoder(self, objval)
+
+    def _putarray(self, objects, basetype):
+        encoder = sfx_support_types[basetype]['encoder']
+        objlen = len(objects)
+        self._putshort(objlen)
+
+        for i in range(0, objlen):
+            obj = objects[i]
+            encoder(self, obj)
+
+    def _putSFXObjArray(self, objects):
+        objlen = len(objects)
+        self._putshort(objlen)
+
+        for i in range(0, objlen):
+            objtype = objects[i][0]
+            objval = objects[i][1]
+            self._putbyte(self._get_type_id(objtype))
+            encoder = sfx_support_types[objtype]['encoder']
+            encoder(self, objval)
+
+def encode_sfx_object(sfsobj):
+    encoder = SFSEncoder()
+    return encoder.encodeObject(sfsobj)
