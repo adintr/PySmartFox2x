@@ -15,22 +15,22 @@ class SFSDecoder:
         return self.__buffer[self.__idx - length: self.__idx]
 
     def _getByte(self):
-        return unpack('b', self._get(1))[0]
+        return unpack('b', str(self._get(1)))[0]
 
     def _getShort(self):
-        return unpack('!h', self._get(2))[0]
+        return unpack('!h', str(self._get(2)))[0]
 
     def _getInt(self):
-        return unpack('!i', self._get(4))[0]
+        return unpack('!i', str(self._get(4)))[0]
 
     def _getLong(self):
-        return unpack('!q', self._get(8))[0]
+        return unpack('!q', str(self._get(8)))[0]
 
     def _getFloat(self):
-        return unpack('!f', self._get(4))[0]
+        return unpack('!f', str(self._get(4)))[0]
 
     def _getDouble(self):
-        return unpack('!d', self._get(8))[0]
+        return unpack('!d', str(self._get(8)))[0]
 
     def _getString(self):
         return self._get(self._getShort()).decode('utf-8')
